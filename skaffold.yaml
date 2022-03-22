@@ -1,0 +1,16 @@
+apiVersion: skaffold/v2beta26
+kind: Config
+metadata:
+  name: rewrite-app-with-istio
+build:
+  artifacts:
+    - image: rewrite-app-with-istio
+deploy:
+  helm:
+    releases:
+      - name: rewrite-app-with-istio
+        chartPath: helm
+        artifactOverrides:
+          image: rewrite-app-with-istio
+        imageStrategy:
+          helm: {}

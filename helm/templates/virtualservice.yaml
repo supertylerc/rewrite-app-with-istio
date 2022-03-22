@@ -1,0 +1,15 @@
+{{- if .Values.istioVirtualService.enabled }}
+apiVersion: networking.istio.io/v1beta1
+kind: VirtualService
+metadata:
+  name: {{ include "..fullname" . }}
+  labels:
+    {{- include "..labels" . | nindent 4 }}
+spec:
+  gateways:
+    - {{ include "..fullname" . }}
+  hosts:
+    {{- toYaml .Values.istioVirtualService.hosts | nindent 4 }}
+  http:
+    {{- toYaml .Values.istioVirtualService.routes | nindent 4 }}
+{{- end }}
