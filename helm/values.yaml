@@ -2,13 +2,46 @@
 # This is a YAML-formatted file.
 # Declare variables to be passed into your templates.
 
-replicaCount: 1
+deployments:
+  blue:
+    replicaCount: 1
+    image:
+      repository: rewrite-app-with-istio
+      pullPolicy: IfNotPresent
+      tag: latest
+    containerPort: "5000"
+    podLabels:
+      sidecar.istio.io/inject: "true"
+      color: blue
+    podAnnotations: {}
+    podSecurityContext: {}
+    securityContext: {}
+    env:
+      EXAMPLE_SERVICE: http://rewrite-app-with-istio
+    resources: {}
+    nodeSelector: {}
+    tolerations: []
+    affinity: {}
+  green:
+    replicaCount: 1
+    image:
+      repository: rewrite-app-with-istio-v2
+      pullPolicy: IfNotPresent
+      tag: latest
+    containerPort: "5000"
+    podLabels:
+      sidecar.istio.io/inject: "true"
+      color: green
+    podAnnotations: {}
+    podSecurityContext: {}
+    securityContext: {}
+    env:
+      EXAMPLE_SERVICE: http://rewrite-app-with-istio
+    resources: {}
+    nodeSelector: {}
+    tolerations: []
+    affinity: {}
 
-image:
-  repository: rewrite-app-with-istio
-  pullPolicy: IfNotPresent
-  # Overrides the image tag whose default is the chart appVersion.
-  tag: latest
 
 imagePullSecrets: []
 nameOverride: ""
@@ -23,47 +56,9 @@ serviceAccount:
   # If not set and create is true, a name is generated using the fullname template
   name: ""
 
-containerPort: "5000"
-podLabels:
-  sidecar.istio.io/inject: "true"
-
-podAnnotations: {}
-
-podSecurityContext: {}
-  # fsGroup: 2000
-
-securityContext: {}
-  # capabilities:
-  #   drop:
-  #   - ALL
-  # readOnlyRootFilesystem: true
-  # runAsNonRoot: true
-  # runAsUser: 1000
-
-env:
-  EXAMPLE_SERVICE: http://rewrite-app-with-istio
-
 service:
   type: ClusterIP
   port: 80
-
-resources: {}
-  # We usually recommend not to specify default resources and to leave this as a conscious
-  # choice for the user. This also increases chances charts run on environments with little
-  # resources, such as Minikube. If you do want to specify resources, uncomment the following
-  # lines, adjust them as necessary, and remove the curly braces after 'resources:'.
-  # limits:
-  #   cpu: 100m
-  #   memory: 128Mi
-  # requests:
-  #   cpu: 100m
-  #   memory: 128Mi
-
-nodeSelector: {}
-
-tolerations: []
-
-affinity: {}
 
 istioGateway:
   enabled: true
@@ -77,12 +72,52 @@ istioGateway:
       hosts:
         - rewrite-app-with-istio.test
 
-istioVirtualService:
-  enabled: true
-  hosts:
-    - rewrite-app-with-istio.test
-  routes:
-    - name: "rewrite-app-with-istio-route"
-      route:
-        - destination:
-            host: rewrite-app-with-istio
+istioVirtualServices:
+  - name: ingress
+    gateways:
+      - rewrite-app-with-istio
+    hosts:
+      - rewrite-app-with-istio.test
+    routes:
+      - name: "rewrite-app-with-istio-route-v2"
+        match:
+          - uri:
+              prefix: "/random/number"
+        route:
+          - destination:
+              host: rewrite-app-with-istio
+              subset: green
+            weight: 0
+          - destination:
+              host: rewrite-app-with-istio
+              subset: blue
+            weight: 100
+      - name: "rewrite-app-with-istio-route-v1"
+        route:
+          - destination:
+              host: rewrite-app-with-istio
+              subset: blue
+            weight: 100
+  - name: cluster
+    hosts:
+      - rewrite-app-with-istio
+    routes:
+      - name: "rewrite-app-with-istio-route-v2"
+        match:
+          - uri:
+              prefix: "/random/number"
+        route:
+          - destination:
+              host: rewrite-app-with-istio
+              subset: green
+            weight: 0
+          - destination:
+              host: rewrite-app-with-istio
+              subset: blue
+            weight: 100
+      - name: "rewrite-app-with-istio-route-v1"
+        route:
+          - destination:
+              host: rewrite-app-with-istio
+              subset: blue
+            weight: 100

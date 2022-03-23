@@ -34,11 +34,11 @@ def root():
 @app.route("/random/number")
 def random_number():
     # Simulate some problem in the app logic by sleeping for random time
-    # This is a new API endpoint that we will rewrite in Golang later
     time.sleep(random.randint(0.0, 1.0))
     return {
         "location": "/random/number",
-        "number": random.randint(0, 9999)
+        "number": random.randint(0, 9999),
+        "endpoint_version": "v1",
     }
 
 

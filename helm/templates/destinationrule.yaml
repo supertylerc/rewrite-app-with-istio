@@ -1,0 +1,13 @@
+---
+apiVersion: networking.istio.io/v1beta1
+kind: DestinationRule
+metadata:
+  name: {{ include "..fullname" . }}
+spec:
+  host: {{ include "..fullname" . }}
+  subsets:
+{{- range $color, $_ := .Values.deployments }}
+  - name: {{ $color }}
+    labels:
+      color: {{ $color }}
+{{- end }}
